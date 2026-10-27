@@ -16,10 +16,8 @@ jobs:
         run: ls -la
 
       - name: Checkout my code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v3
 
       - name: Build docker image
         run: |
@@ -37,7 +35,7 @@ jobs:
           curl http://localhost:5000/api/health || exit 1
 
       - name: set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
