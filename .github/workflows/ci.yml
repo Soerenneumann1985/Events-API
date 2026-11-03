@@ -49,8 +49,40 @@ jobs:
       - name: run tests
         run: |
           pytest -v
-          
-      
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout my code
+        uses: actions/checkout@v5
+
+      - name: Log in to Docker Hub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build and tag image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/events-api:latest .
+
+      - name: Push image to Docker Hub
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/events-api:latest
+
+      - name: Trigger Render deploy
+        run: |
+          curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" > /dev/null
+
+      - name: Wait for Render
+        run: |
+          sleep 90
+
+      - name: Smoke test on Render
+        run: |
+          curl -fsS --retry 10 --retry-delay 15 --retry-all-errors "${{ secrets.RENDER_BASE_URL }}/api/health"  
 
 
 
